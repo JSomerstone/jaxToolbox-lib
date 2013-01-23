@@ -1,9 +1,10 @@
 <?php
 namespace jaxToolbox\lib;
 
-abstract class Curlifier
+class Curlifier
 {
-    static $defaults = array(
+    private $curlHandler;
+    private $defaults = array(
         CURLOPT_RETURNTRANSFER  => 1,
         CURLOPT_HEADER => 1,
         CURLOPT_FRESH_CONNECT => 1,
@@ -13,7 +14,8 @@ abstract class Curlifier
         CURLOPT_FOLLOWLOCATION => true
     );
 
-    static $userAgents = array(
+    private $userAgent = '';
+    private $userAgents = array(
         'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)',
         'Mozilla/5.0 (Windows; U; MSIE 9.0; WIndows NT 9.0; en-US))',
         'Mozilla/5.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0; GTB7.4; InfoPath.2; SV1; .NET CLR 3.3.69573; WOW64; en-US)',
@@ -31,65 +33,165 @@ abstract class Curlifier
         'Mozilla/5.0 (Macintosh; U; PPC Mac OS X; ja-jp) AppleWebKit/419 (KHTML, like Gecko) Shiira/1.2.3 Safari/125',
     );
 
-    static $lastUrl = 'http://localhost/';
+    private $lastHeader = '';
+    private $lastBody = '';
+    private $lastHttpdCode = '';
+    private $lastUrl = 'http://localhost/';
+    private $curlError = '';
 
-    public static function request(
-        $url = 'http://localhost',
-        $get = array(),
-        $post = array(),
-        $cookie = array(),
+    private $cookies;
+
+    private $nextUrl;
+    private $nextPost = array();
+    private $nextGet = array();
+
+    public function __construct()
+    {
+        $this->curlHandler = curl_init();
+    }
+
+    public function setUrl($url)
+    {
+        $this->nextUrl = $url;
+        return $this;
+    }
+
+    public function setPost($post = array())
+    {
+        $this->nextPost = $post;
+        return $this;
+    }
+
+    public function setGet($get = array())
+    {
+        $this->nextGet = $get;
+        return $this;
+    }
+
+    public function setReferer($url)
+    {
+        $this->lastUrl = $url;
+        return $this;
+    }
+
+    public function request(
+        $url = null,
+        $get = null,
+        $post = null,
+        $cookie = null,
         $referer = null
     )
     {
-        $curlHandler = curl_init();
+        if (!is_null($url))
+            $this->setUrl($url);
+
+        if (!is_null($get))
+            $this->setGet($get);
+
+        if (!is_null($post))
+            $this->setPost($post);
+
+        if (!is_null($cookie))
+            $this->setUrl($cookie);
 
         $url = sprintf(
-                "$url%s%s",
-                empty($get) ? '' : '?',
-                self::curlify($get)
+            "$this->nextUrl%s%s",
+            empty($this->nextGet) ? '' : '?',
+            self::curlify($this->nextGet)
         );
         $settings = array(
             CURLOPT_URL             => $url,
-            CURLOPT_POST            => empty($post) ? 0 : 1,
-            CURLOPT_POSTFIELDS      => self::curlify($post),
-            CURLOPT_REFERER         => $referer ?: self::$lastUrl,
-            CURLOPT_USERAGENT       => self::$userAgents[rand(0,count(self::$userAgents)-1)]
+            CURLOPT_POST            => empty($this->nextPost) ? 0 : 1,
+            CURLOPT_POSTFIELDS      => self::curlify($this->nextPost),
+            CURLOPT_REFERER         => $referer ?: $this->lastUrl,
+            CURLOPT_USERAGENT       => $this->userAgent ?: $this->userAgents[
+                rand(0,count($this->userAgents)-1)
+            ]
         );
 
-        if (!empty($cookie))
-            $settings[CURLOPT_COOKIE] = self::curlify($cookie);
+        if (!empty($this->cookies))
+            $settings[CURLOPT_COOKIE] = self::curlify($this->cookies);
 
-        curl_setopt_array($curlHandler, $settings + self::$defaults);
+        curl_setopt_array($this->curlHandler, $settings + $this->defaults);
 
-        //$output = curl_exec($curlHandler);
-        $response = curl_exec($curlHandler);
-        $error = curl_error($curlHandler);
-        $result = array( 'header' => '',
-                         'body' => '',
-                         'curl_error' => '',
-                         'http_code' => '',
-                         'last_url' => '');
+        $response = curl_exec($this->curlHandler);
+        $error = curl_error($this->curlHandler);
         if ( $error != "" )
         {
-            $result['curl_error'] = $error;
-            return $result;
+            throw new CurlifierException($error);
         }
 
-        $header_size = curl_getinfo($curlHandler, CURLINFO_HEADER_SIZE);
-        $result['header'] = substr($response, 0, $header_size);
-        $result['body'] = substr( $response, $header_size );
-        $result['http_code'] = curl_getinfo($curlHandler, CURLINFO_HTTP_CODE);
-        $result['last_url'] = curl_getinfo($curlHandler, CURLINFO_EFFECTIVE_URL);
-        self::$lastUrl = $result['last_url'];
-        return $result;
+        $headerSize = curl_getinfo($this->curlHandler, CURLINFO_HEADER_SIZE);
+        $this->lastHeader = substr($response, 0, $headerSize);
+        $this->lastBody = substr( $response, $headerSize );
+        $this->lastHttpdCode = curl_getinfo($this->curlHandler, CURLINFO_HTTP_CODE);
+        $this->lastUrl = curl_getinfo($this->curlHandler, CURLINFO_EFFECTIVE_URL);
+
+        $this->getCookieFromHeader();
+        return $this;
     }
 
-    public static function getRedirect($url)
+    private function getCookieFromHeader()
     {
-
+        if (empty($this->lastHeader))
+            return;
+        preg_match('|SECUREWEBSTAGE11SESSION=[a-zA-Z0-9\/_]+|', $this->lastHeader, $matches);
     }
 
-    private static function curlify($settings)
+    public function setCookies($listOfCookies)
+    {
+       $this->cookies = array();
+        foreach($listOfCookies as $name => $value)
+        {
+            $this->addCookie($name, $value);
+        }
+    }
+
+    public function setCookie($name, $value)
+    {
+        $this->cookies = array($name => $value);
+        return $this;
+    }
+
+    public function addCookie($name, $value)
+    {
+        $this->cookies[$name] = $value;
+        return $this;
+    }
+
+    public function removeCookie($name)
+    {
+        unset($this->cookies[$name]);
+        return $this;
+    }
+
+    public function getHeader()
+    {
+        return $this->lastHeader;
+    }
+
+    public function getBody()
+    {
+        return $this->lastBody;
+    }
+
+    public function getBodyMatches($regexp)
+    {
+        preg_match($regexp, $this->lastBody, $matches);
+        return $matches;
+    }
+
+    public function bodyMatchesExpression($regexp)
+    {
+        return preg_match($regexp, $this->lastBody);
+    }
+
+    public function getHttpCode()
+    {
+        return $this->lastHttpdCode;
+    }
+
+    private static function curlify($settings = array())
     {
         $curlified = '';
         foreach($settings as $key => $value)
@@ -100,3 +202,5 @@ abstract class Curlifier
     }
 
 }
+
+class CurlifierException extends \Exception {}
