@@ -9,9 +9,9 @@ class Curlifier
         CURLOPT_HEADER => 1,
         CURLOPT_FRESH_CONNECT => 1,
         CURLOPT_FORBID_REUSE => 1,
-        //CURLOPT_VERBOSE => 1,
+        CURLOPT_VERBOSE => 0,
         CURLOPT_TIMEOUT => 40,
-        CURLOPT_FOLLOWLOCATION => true
+        CURLOPT_FOLLOWLOCATION => 0
     );
 
     private $userAgent = '';
@@ -74,43 +74,81 @@ class Curlifier
         return $this;
     }
 
-    public function request(
-        $url = null,
-        $get = null,
-        $post = null,
-        $cookie = null,
-        $referer = null
-    )
+    public function setVerbose($bool = true)
     {
-        if (!is_null($url))
-            $this->setUrl($url);
+        $this->defaults[CURLOPT_VERBOSE] = $bool ? 1 : 0;
+        return $this;
+    }
 
-        if (!is_null($get))
-            $this->setGet($get);
+    public function setFollowRedirect($bool = true)
+    {
+        $this->defaults[CURLOPT_FOLLOWLOCATION] = $bool ? 1 : 0;
+        return $this;
+    }
 
-        if (!is_null($post))
-            $this->setPost($post);
+    public function setHeaderIp($ipAddress)
+    {
+        $this->defaults[CURLOPT_HTTPHEADER] = array(
+            "REMOTE_ADDR: $ipAddress",
+            "HTTP_X_FORWARDED_FOR: $ipAddress"
+        );
+        return $this;
+    }
 
-        if (!is_null($cookie))
-            $this->setUrl($cookie);
+    /**
+     * Make a curl-request
+     *
+     * All parameters are optional, the URL must be given either as parameter or via ->setUrl()
+     * All settings from $parameters will override those set via ->set*() -functions
+     * 
+     * $parameters array can hold following indexes:
+     *      url - The url to send request to
+     *      get - Associative array with GET-parameters
+     *      post - Associative array with POST-parameters
+     *      cookie - Associative array with Cookie names and values
+     *      referer - The URL to send as "referer" in the request
+     *      userAgent - User agent -string
+     *
+     * @param array $parameters optional parameters to use on this request only
+     * @return \jaxToolbox\lib\Curlifier
+     * @throws CurlifierException If an curl-error is encoutered
+     */
+    public function request($parameters = array())
+    {
+        $url = isset($parameters['url']) ? $parameters['url'] : $this->nextUrl;
+        $get = isset($parameters['get']) ? $parameters['get'] : $this->nextGet;
+        $post = isset($parameters['post']) ? $parameters['post'] : $this->nextPost;
+        $cookies = isset($parameters['cookie']) ? $parameters['cookie'] : $this->cookies;
+        $referer = isset($parameters['referer']) ? $parameters['referer'] : $this->lastUrl;
+        $userAgent = isset($parameters['userAgent']) ? $parameters['userAgent'] : $this->userAgent;
+
+        if (empty($url))
+        {
+            throw new CurlifierException('Unable to make request to empty URL');
+        }
 
         $url = sprintf(
-            "$this->nextUrl%s%s",
-            empty($this->nextGet) ? '' : '?',
-            self::curlify($this->nextGet)
+            "$url%s%s",
+            empty($get) ? '' : '?',
+            self::curlify($get)
         );
+
         $settings = array(
             CURLOPT_URL             => $url,
-            CURLOPT_POST            => empty($this->nextPost) ? 0 : 1,
-            CURLOPT_POSTFIELDS      => self::curlify($this->nextPost),
-            CURLOPT_REFERER         => $referer ?: $this->lastUrl,
-            CURLOPT_USERAGENT       => $this->userAgent ?: $this->userAgents[
+            CURLOPT_REFERER         => $referer,
+            CURLOPT_USERAGENT       => $userAgent ?: $this->userAgents[
                 rand(0,count($this->userAgents)-1)
             ]
         );
 
-        if (!empty($this->cookies))
-            $settings[CURLOPT_COOKIE] = self::curlify($this->cookies);
+        if (!empty($post))
+        {
+            $settings[CURLOPT_POST] = 1;
+            $settings[CURLOPT_POSTFIELDS] = self::curlify($post);
+        }
+
+        if (!empty($cookies))
+            $settings[CURLOPT_COOKIE] = self::curlify($cookies);
 
         curl_setopt_array($this->curlHandler, $settings + $this->defaults);
 
@@ -135,7 +173,7 @@ class Curlifier
     {
         if (empty($this->lastHeader))
             return;
-        preg_match('|SECUREWEBSTAGE11SESSION=[a-zA-Z0-9\/_]+|', $this->lastHeader, $matches);
+        // TODO: parse "Set-Cookie: "-headers and set them
     }
 
     public function setCookies($listOfCookies)
@@ -168,6 +206,17 @@ class Curlifier
     public function getHeader()
     {
         return $this->lastHeader;
+    }
+
+    public function getHeaderMatches($regexp)
+    {
+        preg_match($regexp, $this->lastHeader, $matches);
+        return $matches;
+    }
+
+    public function headerMatchesExpression($regexp)
+    {
+        return preg_match($regexp, $this->lastHeader);
     }
 
     public function getBody()
