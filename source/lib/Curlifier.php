@@ -90,7 +90,9 @@ class Curlifier
     {
         $this->defaults[CURLOPT_HTTPHEADER] = array(
             "REMOTE_ADDR: $ipAddress",
-            "HTTP_X_FORWARDED_FOR: $ipAddress"
+            "HTTP_X_FORWARDED_FOR: $ipAddress",
+            "HTTP_X_FORWARDED: $ipAddress",
+            "HTTP_CLIENT_IP: $ipAddress",
         );
         return $this;
     }
@@ -100,7 +102,7 @@ class Curlifier
      *
      * All parameters are optional, the URL must be given either as parameter or via ->setUrl()
      * All settings from $parameters will override those set via ->set*() -functions
-     * 
+     *
      * $parameters array can hold following indexes:
      *      url - The url to send request to
      *      get - Associative array with GET-parameters
@@ -118,7 +120,9 @@ class Curlifier
         $url = isset($parameters['url']) ? $parameters['url'] : $this->nextUrl;
         $get = isset($parameters['get']) ? $parameters['get'] : $this->nextGet;
         $post = isset($parameters['post']) ? $parameters['post'] : $this->nextPost;
-        $cookies = isset($parameters['cookie']) ? $parameters['cookie'] : $this->cookies;
+        $cookies = isset($parameters['cookie'])
+            ? array_merge($this->cookies, $parameters['cookie'])
+            : $this->cookies;
         $referer = isset($parameters['referer']) ? $parameters['referer'] : $this->lastUrl;
         $userAgent = isset($parameters['userAgent']) ? $parameters['userAgent'] : $this->userAgent;
 
@@ -141,11 +145,8 @@ class Curlifier
             ]
         );
 
-        if (!empty($post))
-        {
-            $settings[CURLOPT_POST] = 1;
-            $settings[CURLOPT_POSTFIELDS] = self::curlify($post);
-        }
+        $settings[CURLOPT_POST] = empty($post);
+        $settings[CURLOPT_POSTFIELDS] = self::curlify($post);
 
         if (!empty($cookies))
             $settings[CURLOPT_COOKIE] = self::curlify($cookies);
