@@ -148,8 +148,7 @@ class Curlifier
         $settings[CURLOPT_POST] = empty($post);
         $settings[CURLOPT_POSTFIELDS] = self::curlify($post);
 
-        if (!empty($cookies))
-            $settings[CURLOPT_COOKIE] = self::curlify($cookies);
+        $settings[CURLOPT_COOKIE] = self::curlify($cookies);
 
         curl_setopt_array($this->curlHandler, $settings + $this->defaults);
 
@@ -243,6 +242,9 @@ class Curlifier
 
     private static function curlify($settings = array())
     {
+        if (empty($settings))
+            return;
+        
         $curlified = '';
         foreach($settings as $key => $value)
         {

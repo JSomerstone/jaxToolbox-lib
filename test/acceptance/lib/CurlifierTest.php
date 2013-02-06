@@ -1,7 +1,7 @@
 <?php
 namespace test\acceptance\lib;
 
-class CurlifierTest extends \PHPUnit_Framework_TestCase
+class CurlifierTest extends \test\acceptance\AcceptanceTestCase
 {
     /**
      * @var \jaxToolbox\lib\Curlifier
@@ -29,6 +29,25 @@ class CurlifierTest extends \PHPUnit_Framework_TestCase
         $this->get = array();
         $this->cookie = array();
         $this->requestRead = false;
+    }
+
+    public function testEmptyRequest()
+    {
+       $this->curlifier->request();
+       $this->assertHttpSuccess()
+            ->assertGetEmpty()
+            ->assertPostEmpty()
+            ->assertCookieEmpty()
+            ->assertArrayHasKeys(
+                array(
+                    'HTTP_USER_AGENT',
+                    'HTTP_REFERER',
+                    'HTTP_COOKIE',
+                    'REQUEST_METHOD',
+                    'REQUEST_URI',
+                ),
+                $this->header
+            );
     }
 
     /**
@@ -261,14 +280,36 @@ class CurlifierTest extends \PHPUnit_Framework_TestCase
 
     protected function assertHeaderReferer($expected)
     {
-        $this->assertHeader('HTTP_REFERER', $expected);
+        $this->assertHeaderValue('HTTP_REFERER', $expected);
+        return $this;
     }
 
-    protected function assertHeader($key, $value)
+    protected function assertHeaderHasKeys($listOfKeys)
+    {
+        foreach ($listOfKeys as $expectedKey)
+        {
+            $this->assertArrayHasKey(
+                $expectedKey,
+                $this->header,
+                "Header did not have expected key '$expectedKey'"
+            );
+        }
+        return $this;
+    }
+
+    protected function assertHeaderValue($key, $value)
     {
         $this->readRequestMirror();
         $this->assertArrayHasKey($key, $this->header);
         $this->assertSame($value, $this->header[$key]);
+        return $this;
+    }
+
+    protected function assertCookieEmpty()
+    {
+      $this->readRequestMirror();
+      $this->assertEmpty($this->cookie);
+      return $this;
     }
 
     protected function assertCookie($key, $value)
@@ -276,5 +317,6 @@ class CurlifierTest extends \PHPUnit_Framework_TestCase
         $this->readRequestMirror();
         $this->assertArrayHasKey($key, $this->cookie);
         $this->assertSame($value, $this->cookie[$key]);
+        return $this;
     }
 }
