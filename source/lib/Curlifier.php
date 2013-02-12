@@ -14,7 +14,7 @@ class Curlifier
         CURLOPT_FOLLOWLOCATION => 0
     );
 
-    private $userAgent = '';
+    private $userAgent = 'cURL';
     private $userAgents = array(
         'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)',
         'Mozilla/5.0 (Windows; U; MSIE 9.0; WIndows NT 9.0; en-US))',
@@ -97,6 +97,19 @@ class Curlifier
         return $this;
     }
 
+    public function setUserAgent($userAgent)
+    {
+        $this->userAgent = $userAgent;
+        return $this;
+    }
+
+    public function setRandomUserAgent()
+    {
+        $this->userAgent = $this->userAgents[
+            rand(0,count($this->userAgents)-1)
+        ];
+    }
+
     /**
      * Make a curl-request
      *
@@ -118,8 +131,14 @@ class Curlifier
     public function request($parameters = array())
     {
         $url = isset($parameters['url']) ? $parameters['url'] : $this->nextUrl;
-        $get = isset($parameters['get']) ? $parameters['get'] : $this->nextGet;
-        $post = isset($parameters['post']) ? $parameters['post'] : $this->nextPost;
+        $get = isset($parameters['get'])
+            ? array_merge($this->nextGet, $parameters['get'])
+            : $this->nextGet;
+
+        $post = isset($parameters['post'])
+            ? array_merge($this->nextPost, $parameters['post'])
+            : $this->nextPost;
+
         $cookies = isset($parameters['cookie'])
             ? array_merge($this->cookies, $parameters['cookie'])
             : $this->cookies;
@@ -138,11 +157,9 @@ class Curlifier
         );
 
         $settings = array(
-            CURLOPT_URL             => $url,
-            CURLOPT_REFERER         => $referer,
-            CURLOPT_USERAGENT       => $userAgent ?: $this->userAgents[
-                rand(0,count($this->userAgents)-1)
-            ]
+            CURLOPT_URL       => $url,
+            CURLOPT_REFERER   => $referer,
+            CURLOPT_USERAGENT => $userAgent
         );
 
         $settings[CURLOPT_POST] = empty($post);
@@ -244,7 +261,7 @@ class Curlifier
     {
         if (empty($settings))
             return;
-        
+
         $curlified = '';
         foreach($settings as $key => $value)
         {

@@ -16,31 +16,28 @@
         </testsuite>
     </testsuites>
 
-    <!--filter>
+    <filter>
         <whitelist>
-            <directory suffix=".php">../Source</directory>
+            <directory suffix=".php">../source</directory>
             <exclude>
-                <directory suffix=".php">../Source/Public/</directory>
-                <directory suffix=".php">../Source/View/</directory>
-                <directory suffix=".php">../Source/Layout/</directory>
-                <directory suffix=".php">../Source/Test/</directory>
+                <directory suffix=".php">../source/exex/</directory>
             </exclude>
         </whitelist>
-    </filter-->
+    </filter>
 
 
-    <!--logging>
+    <logging>
         <log type="junit"
-             target="../Documents/junit.xml"
+             target="../doc/junit.xml"
              logIncompleteSkipped="true" />
 
         <log type="coverage-html"
-            target="../Documents/Coverage/"
+            target="../doc/coverage/"
             charset="UTF-8"
             yui="true"
             highlight="true"
             lowUpperBound="50"
-            highLowerBound="80" />
-    </logging-->
+            highLowerBound="75" />
+    </logging>
 
 </phpunit>

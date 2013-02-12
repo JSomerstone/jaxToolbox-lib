@@ -42,7 +42,6 @@ class CurlifierTest extends \test\acceptance\AcceptanceTestCase
                 array(
                     'HTTP_USER_AGENT',
                     'HTTP_REFERER',
-                    'HTTP_COOKIE',
                     'REQUEST_METHOD',
                     'REQUEST_URI',
                 ),
@@ -69,7 +68,7 @@ class CurlifierTest extends \test\acceptance\AcceptanceTestCase
      */
     public function testGetRequest()
     {
-        $input = array('one' => 1);
+        $input = array('fuu' => 'bar');
         $this->curlifier->request(array(
             'get' => $input
         ));
@@ -79,6 +78,52 @@ class CurlifierTest extends \test\acceptance\AcceptanceTestCase
             ->assertPostEmpty();
     }
 
+    /**
+     * @test
+     */
+    public function testMixingGetTypes()
+    {
+        $setGet = array('fuu' => 'bar');
+        $requestGet = array('one' => '1');
+        $expectedGet = array(
+            'fuu' => 'bar',
+            'one' => '1'
+        );
+
+        $this->curlifier
+            ->setGet($setGet)
+            ->request(array(
+                'get' => $requestGet
+            ));
+
+        $this
+            ->assertHttpSuccess()
+            ->assertGetHasValues($expectedGet)
+            ->assertPostEmpty();
+    }
+
+    /**
+     * @test
+     */
+    public function testMixingGetTypesWithConflicting()
+    {
+        $setGet = array('source' => 'setter');
+        $requestGet = array('source' => 'request');
+        $expectedGet = array(
+            'source' => 'request'
+        );
+
+        $this->curlifier
+            ->setGet($setGet)
+            ->request(array(
+                'get' => $requestGet
+            ));
+
+        $this
+            ->assertHttpSuccess()
+            ->assertGetHasValues($expectedGet)
+            ->assertPostEmpty();
+    }
 
     /**
      * @test
@@ -119,6 +164,45 @@ class CurlifierTest extends \test\acceptance\AcceptanceTestCase
         $this->assertPostEmpty();
     }
 
+    public function testMixingPostTypes()
+    {
+        $setPost = array('fuu' => 'bar');
+        $requestPost = array('one' => '1');
+        $expectedPost = array(
+            'fuu' => 'bar',
+            'one' => '1'
+        );
+
+        $this->curlifier
+            ->setPost($setPost)
+            ->request(array(
+                'post' => $requestPost
+            ));
+
+        $this
+            ->assertHttpSuccess()
+            ->assertPostHasValues($expectedPost);
+    }
+
+    public function testMixingPostTypesWithConflicting()
+    {
+        $setPost = array('source' => 'setter');
+        $requestPost = array('source' => 'request');
+        $expectedPost = array(
+            'source' => 'request'
+        );
+
+        $this->curlifier
+            ->setPost($setPost)
+            ->request(array(
+                'post' => $requestPost
+            ));
+
+        $this
+            ->assertHttpSuccess()
+            ->assertPostHasValues($expectedPost);
+    }
+
     public function testSetReferer()
     {
         $expectedReferer = 'http://google.com';
@@ -140,6 +224,41 @@ class CurlifierTest extends \test\acceptance\AcceptanceTestCase
         $this
             ->assertHttpSuccess()
             ->assertHeaderReferer($expectedReferer);
+    }
+
+    public function testSetUserAgent()
+    {
+        $userAgent = 'FakeUserAgent 1.2';
+        $this->curlifier
+            ->setUserAgent($userAgent)
+            ->request();
+
+        $this->assertHttpSuccess()
+            ->assertUserAgent($userAgent);
+
+        $this->teardown(); //Clear previous result
+        $this->curlifier->request();
+        //New request should hould the same userAgent
+        $this->assertHttpSuccess()
+            ->assertUserAgent($userAgent);
+    }
+
+    public function testRequestWithUserAgent()
+    {
+        $userAgent = 'FakeUserAgent 1.2';
+        $this->curlifier
+            ->request(array(
+                'userAgent' => $userAgent
+            ));
+
+        $this->assertHttpSuccess()
+            ->assertUserAgent($userAgent);
+
+        $this->teardown(); //Clear previous result
+        $this->curlifier->request();
+        //New request should be made with default userAgent
+        $this->assertHttpSuccess()
+            ->assertUserAgent('cURL');
     }
 
 
@@ -167,7 +286,28 @@ class CurlifierTest extends \test\acceptance\AcceptanceTestCase
         $this->assertCookie('FUUU_X_COOKIE', 'QWERTY1234');
     }
 
+    public function testMultipleCookiesRemainsBetweenRequests()
+    {
+        $this->markTestSkipped('Handling multiple cookies doesn`t work - yet');
+        $this->curlifier
+            ->addCookie('FUUU_X_COOKIE', 'QWERTY1234')
+            ->addCookie('TEMPORARY', '1324567890')
+            ->setVerbose(true)
+            ->request();
 
+        $this
+            ->assertHttpSuccess()
+            ->assertCookie('FUUU_X_COOKIE', 'QWERTY1234') //Will fail
+            ->assertCookie('TEMPORARY', '1324567890');
+
+        $this->teardown(); //Clear results from previous request
+        $this->curlifier
+            ->removeCookie('TEMPORARY') //Remove other cookie
+            ->request();
+
+        $this->assertCookie('FUUU_X_COOKIE', 'QWERTY1234')
+            ->assertCookieNotSet('TEMPORARY');
+    }
 
     /**
      * Assertion functions
@@ -305,6 +445,27 @@ class CurlifierTest extends \test\acceptance\AcceptanceTestCase
         return $this;
     }
 
+    protected function assertUserAgent($userAgent)
+    {
+        $this->readRequestMirror();
+        $this->assertArrayHasKey(
+            'HTTP_USER_AGENT',
+            $this->header
+        );
+        $this->assertSame($userAgent, $this->header['HTTP_USER_AGENT']);
+        return $this;
+    }
+
+    protected function assertCookieNotSet($nameOfCookie)
+    {
+        //If no cookies send -> given cookie cannot be set
+        if ( !empty($this->cookie))
+        {
+            $this->assertArrayNotHasKey($nameOfCookie, $this->cookie);
+        }
+        return $this;
+    }
+
     protected function assertCookieEmpty()
     {
       $this->readRequestMirror();
@@ -317,6 +478,13 @@ class CurlifierTest extends \test\acceptance\AcceptanceTestCase
         $this->readRequestMirror();
         $this->assertArrayHasKey($key, $this->cookie);
         $this->assertSame($value, $this->cookie[$key]);
+        return $this;
+    }
+
+    protected function dumpHeaders()
+    {
+        $this->readRequestMirror();
+        D($this->header);
         return $this;
     }
 }
