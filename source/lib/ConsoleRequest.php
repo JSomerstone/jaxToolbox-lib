@@ -129,21 +129,30 @@ class ConsoleRequest
     }
 
     /**
-     * Check if given argument(s) were given with setInput()
+     * Check if given argument were given with setInput()
      * @return bool True if even one of given arguments was given
      */
-    public function hasArgument()
+    public function hasArgument($argument)
+    {
+        return isset($this->arguments[$argument]);
+    }
+
+    /**
+     * Check if all of given arguments were given with setInput()
+     * @return boolean
+     */
+    public function hasArguments()
     {
         $arguments = func_get_args();
 
         foreach ($arguments as $argumentName)
         {
-            //Found argument!
-            if (isset($this->arguments[$argumentName]))
-               return true;
+            //missing an argument
+            if ( ! isset($this->arguments[$argumentName]))
+               return false;
         }
-        //Did not found...
-        return false;
+        //Got all
+        return true;
     }
 
     /**
