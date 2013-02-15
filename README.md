@@ -157,7 +157,7 @@ $curlifier->setRandomUserAgent();
 
 Curlifier can set the cURL to output the request process into scripts output. If not specified Curlifier will **not** output the request process.
 To enable verbose mode:
-``php
+```php
 $curlifier->setVerbose();
 //or
 $curlifier->setVerbose(true);
