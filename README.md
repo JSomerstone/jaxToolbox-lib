@@ -25,9 +25,11 @@ _Work in progress_
 Api
 ---
 **Request**
+
 There is multiple ways to perform requests with Curlifier. You can either set all required parameters with setters (see below) or pass them as parameter to the request()-method. Or you can mix the two ways.
 
 **request(array $parameters = array())**
+
 Performs the actual cURL-request and stores info about the response. Parameters to request() are optional but user _must_ provide URL either directly to request() or via setUrl()-method. Request will return the Curlifier-object so the actions after request() can be chained. This method will throw **CurlifierException** if URL is not provided.
 
 Possible keys in $parameters are:
@@ -38,7 +40,7 @@ Possible keys in $parameters are:
 - referer - The URL to send as "referer" in the request
 - userAgent - User agent -string
 
-**Request with parameters passed to request()-method**:
+Request with parameters passed to request()-method:
 ```php
 $curlifier->request(array(
     'url' => 'http://localhost/pageApp.php',
@@ -47,7 +49,8 @@ $curlifier->request(array(
 ));
 ```
 Note that parameters passed to request() will only affect that request - the next request will not have them.
-**Request with setters**:
+
+Request with setters:
 ```php
 $curlifier->setUrl('http://localhost/pageApp.php')
     ->setGet(array('page' => '1'))
