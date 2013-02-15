@@ -51,6 +51,9 @@ class Curlifier
     }
 
     /**
+     * Sets the URL to where each request will be send.
+     *
+     * The url-setting is only mandatory parameter to set in order to call request()-method.
      *
      * @param type $url
      * @return \jaxToolbox\lib\Curlifier
@@ -62,6 +65,10 @@ class Curlifier
     }
 
     /**
+     * Set the POST-parameters to pass on each request.
+     *
+     * Will override any previous parameters set. If called without any parameters
+     * (or an empty array) will remove all POST-parameters.
      *
      * @param type $post
      * @return \jaxToolbox\lib\Curlifier
@@ -73,6 +80,10 @@ class Curlifier
     }
 
     /**
+     * Set the GET-parameters to pass on each request.
+     *
+     * Will override any previous parameters set. If called without any parameters
+     * (or an empty array) will remove all GET-parameters.
      *
      * @param type $get
      * @return \jaxToolbox\lib\Curlifier
@@ -84,8 +95,8 @@ class Curlifier
     }
 
     /**
-     *
-     * @param type $url
+     * Set the request header "HTTP_REFERER" to given value.
+     * @param string $url
      * @return \jaxToolbox\lib\Curlifier
      */
     public function setReferer($url)
@@ -95,8 +106,8 @@ class Curlifier
     }
 
     /**
-     *
-     * @param type $bool
+     * Disable/Enable verbose-mode
+     * @param bool $bool
      * @return \jaxToolbox\lib\Curlifier
      */
     public function setVerbose($bool = true)
@@ -106,8 +117,8 @@ class Curlifier
     }
 
     /**
-     *
-     * @param type $bool
+     * Set cURL to automatically follow/not redirections
+     * @param bool $bool
      * @return \jaxToolbox\lib\Curlifier
      */
     public function setFollowRedirect($bool = true)
@@ -117,24 +128,9 @@ class Curlifier
     }
 
     /**
+     * Set the user agent to given
      *
-     * @param type $ipAddress
-     * @return \jaxToolbox\lib\Curlifier
-     */
-    public function setHeaderIp($ipAddress)
-    {
-        $this->defaults[CURLOPT_HTTPHEADER] = array(
-            "REMOTE_ADDR: $ipAddress",
-            "HTTP_X_FORWARDED_FOR: $ipAddress",
-            "HTTP_X_FORWARDED: $ipAddress",
-            "HTTP_CLIENT_IP: $ipAddress",
-        );
-        return $this;
-    }
-
-    /**
-     *
-     * @param type $userAgent
+     * @param string $userAgent
      * @return \jaxToolbox\lib\Curlifier
      */
     public function setUserAgent($userAgent)
@@ -144,7 +140,7 @@ class Curlifier
     }
 
     /**
-     *
+     * Sets the user agent to a random one
      * @return \jaxToolbox\lib\Curlifier
      */
     public function setRandomUserAgent()
@@ -239,19 +235,25 @@ class Curlifier
         // TODO: parse "Set-Cookie: "-headers and set them
     }
 
-    public function setCookies($listOfCookies)
+    /**
+     * Set list of cookies. Cookies must be provided as associative array
+     * @param array $listOfCookies
+     * @return \jaxToolbox\lib\Curlifier
+     */
+    public function setCookies(array $listOfCookies)
     {
        $this->cookies = array();
         foreach($listOfCookies as $name => $value)
         {
             $this->addCookie($name, $value);
         }
+        return $this;
     }
 
     /**
-     *
-     * @param type $name
-     * @param type $value
+     * Replaces current cookies with given one
+     * @param string $name
+     * @param string $value
      * @return \jaxToolbox\lib\Curlifier
      */
     public function setCookie($name, $value)
@@ -261,9 +263,9 @@ class Curlifier
     }
 
     /**
-     *
-     * @param type $name
-     * @param type $value
+     * Add one cookie to cookie list
+     * @param string $name
+     * @param string $value
      * @return \jaxToolbox\lib\Curlifier
      */
     public function addCookie($name, $value)
@@ -273,7 +275,7 @@ class Curlifier
     }
 
     /**
-     *
+     * Removes cookie by given name from cookie-list
      * @param type $name
      * @return \jaxToolbox\lib\Curlifier
      */
@@ -284,7 +286,7 @@ class Curlifier
     }
 
     /**
-     *
+     * Return the header of last response as string
      * @return string
      */
     public function getHeader()
@@ -292,34 +294,69 @@ class Curlifier
         return $this->lastHeader;
     }
 
+    /**
+     * Returns matches from header to given regular expression as array.
+     *
+     * @see http://php.net/preg_match for more details.
+     * @param string $regexp
+     * @return array
+     */
     public function getHeaderMatches($regexp)
     {
         preg_match($regexp, $this->lastHeader, $matches);
         return $matches;
     }
 
+    /**
+     * Returns 1 or 0 if header mathces given expression or not, false if error occurred
+     *
+     * @see http://php.net/preg_match for more details.
+     * @param string $regexp
+     * @return int|bool
+     */
     public function headerMatchesExpression($regexp)
     {
         return preg_match($regexp, $this->lastHeader);
     }
 
-
+    /**
+     * Get last responses body as string
+     * @return string
+     */
     public function getBody()
     {
         return $this->lastBody;
     }
 
+    /**
+     * Returns matches from body to given regular expression as array.
+     *
+     * @see http://php.net/preg_match for more details.
+     * @param string $regexp
+     * @return array
+     */
     public function getBodyMatches($regexp)
     {
         preg_match($regexp, $this->lastBody, $matches);
         return $matches;
     }
 
+    /**
+     * Returns 1 or 0 if header mathces given expression or not, false if error occurred
+     *
+     * @see http://php.net/preg_match for more details.
+     * @param string $regexp
+     * @return int|bool
+     */
     public function bodyMatchesExpression($regexp)
     {
         return preg_match($regexp, $this->lastBody);
     }
 
+    /**
+     * Get the HTTP -status code of last response
+     * @return int
+     */
     public function getHttpCode()
     {
         return $this->lastHttpdCode;
