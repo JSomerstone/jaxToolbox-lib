@@ -83,7 +83,7 @@ $curlifier->setCookies(array(
     'MYCOOKIE' => 'SOMEVERYSECRETVALUE',
     'OTHERCOOKIE' => 'VALUEOFTHAT',
 ));
-``
+```
 **addCookie(string $name, string $value)**
 
 Add new cookie to existing ones.
