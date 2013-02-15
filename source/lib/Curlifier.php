@@ -362,6 +362,47 @@ class Curlifier
         return $this->lastHttpdCode;
     }
 
+    /**
+     * Parse responses body JSON to php array
+     * Returns null if json decoding fails
+     *
+     * @return array|null
+     */
+    public function getJsonResponse()
+    {
+        return json_decode($this->lastBody, true);
+    }
+
+    /**
+     * Check if the response is in JSON
+     * @return type
+     */
+    public function isResponseJson()
+    {
+        return $this->getJsonResponse() ? true : false;
+    }
+
+    /**
+     * Parse responses body XML to SimpleXMLElement
+     * Returns null if xml parsing fails
+     *
+     * @return \SimpleXMLElement|null
+     */
+    public function getXmlResponse()
+    {
+        $arrayFromXml = @simplexml_load_string($this->lastBody);
+        return $arrayFromXml ?: null;
+    }
+
+    /**
+     * Check if response is in XML
+     * @return bool
+     */
+    public function isResponseXml()
+    {
+        return $this->getXmlResponse() ? true : false;
+    }
+
     private static function curlify($settings = array())
     {
         if (empty($settings))

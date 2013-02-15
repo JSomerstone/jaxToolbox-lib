@@ -192,6 +192,35 @@ Returns the HTTP_CODE of the last response.
 $requestOk = ($curlifier->request()->getHttpCode() === 200);
 ```
 
+**getJsonResponse()**
+
+Returns PHP **array** from JSON response. Will return **NULL** if decoding fails.
+```php
+$jsonArray = $curlifier->request()->getJsonResponse();
+```
+
+**isResponseJson()**
+
+Returns **TRUE** if response is in JSON - **FALSE** otherwise.
+```php
+$wasJson = $curlifier->request()->isResponseJson();
+```
+
+**getXmlResponse()**
+
+Returns **SimpleXMLElement** from XML response. Will return **NULL** if parsing fails.
+```php
+$simpleXml = $curlifier->request()->getXmlResponse();
+```
+
+
+**isResponseXml()**
+
+Returns **TRUE** if response is in XML - **FALSE** otherwise.
+```php
+$wasXml = $curlifier->request()->isResponseXml();
+```
+
 Regexp checks
 -------------
 Curlifier provides couple of ways to directly examine the response with regular expressions.
@@ -230,8 +259,8 @@ Roadmap
 - Multi-cookie support - **Done**
 - Support for "cookie jar"
 - Auto-parsing responses "Set-cookie" -headers and setting cookie accordingly
-- Getting PHP-array from JSON-response
-- Getting PHP-array from XML-response
+- Getting PHP-array from JSON-response - **Done**
+- Getting (PHP-array) SimpleXML from XML-response - **Done**
 
 
 jaxToolbox/lib/StringPermutator

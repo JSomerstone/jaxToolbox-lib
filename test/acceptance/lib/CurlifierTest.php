@@ -325,9 +325,76 @@ class CurlifierTest extends \test\acceptance\AcceptanceTestCase
         $this->assertCookieNotSet('FUUU_X_COOKIE');
     }
 
-    /**
+    public function testGetJsonResponse()
+    {
+        $this->curlifier->request();
+        $bodyAsText = $this->curlifier->getBody();
+        $expectedJson = json_decode($bodyAsText, true);
+
+        $actualJson = $this->curlifier->getJsonResponse();
+
+        $this->assertEquals($expectedJson, $actualJson);
+
+    }
+
+    public function testIsResponseJson()
+    {
+        $this->curlifier->request();
+        $this->assertTrue($this->curlifier->isResponseJson());
+
+        $this->curlifier->setUrl('http://localhost/MirrorXml.php')
+            ->request();
+
+        $this->assertFalse($this->curlifier->isResponseJson());
+    }
+
+    public function testGetJsonResponseFromNonJsonFails()
+    {
+        $this->curlifier->setUrl('http://localhost/MirrorXml.php')
+            ->request();
+        $actualResult = $this->curlifier->getJsonResponse();
+
+        $this->assertNull($actualResult);
+    }
+
+    public function testGetXmlResponse()
+    {
+        $this->curlifier
+                ->setUrl('http://localhost/MirrorXml.php')
+                ->request();
+        $bodyAsText = $this->curlifier->getBody();
+        $expectedXml = simplexml_load_string($bodyAsText);
+
+        $actualXml = $this->curlifier->getXmlResponse();
+
+        $this->assertEquals($expectedXml, $actualXml);
+    }
+
+    public function testIsResponseXml()
+    {
+        // Default response is JSON
+        $this->curlifier->request();
+        $this->assertFalse($this->curlifier->isResponseXml());
+
+        //Get XML-response and verify isResponseXml()
+        $this->curlifier->setUrl('http://localhost/MirrorXml.php')
+            ->request();
+        $this->assertTrue($this->curlifier->isResponseXml());
+
+    }
+
+    public function testGetXmlResponseFromNonXmlFails()
+    {
+        $this->curlifier->request(); //To Mirror.php -> return json
+        $actualResult = $this->curlifier->getXmlResponse();
+
+        $this->assertNull($actualResult);
+        $this->assertFalse($this->curlifier->isResponseXml());
+    }
+
+    /*********************
      * Assertion functions
-     */
+     *********************/
 
     protected function assertHttpSuccess()
     {
