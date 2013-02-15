@@ -12,7 +12,8 @@ Example of simple get-request
 $crl = new \jaxToolbox\lib\Curlifier();
 $response = $crl->setUrl('http://google.com')
 	->request()
-	->getBody();```
+	->getBody();
+```
 
 Introduction
 ------------
@@ -61,26 +62,31 @@ Setters
 Setters reset the settings/parameters of Curlifier. These settings will affect _every_ request where parameters passed to request() will only affect that request. All setters return the Curlifier-object so they can be chained.
 
 **setCookie(string $name, string $value)**
+
 Replaces current cookie(s) with given.
 ```php
 $curlifier->setCookie('MYCOOKIE', 'SOMEVERYSECRETVALUE');
 ```
 
-**setCookies(array $listOfCookies)
+**setCookies(array $listOfCookies)**
+
 Replaces current cookies with given cookies. Cookies must be given as associative array:
 `array( 'nameOfCookie' => 'valueOfCookie')`
+
 **NOTE:** Curlifier doesn't support multi-cookie requests yet - the feature is on top of the roadmap
 `$curlifier->setCookies(array(
     'MYCOOKIE' => 'SOMEVERYSECRETVALUE',
     'OTHERCOOKIE' => 'VALUEOFTHAT',
 ));`
 **addCookie(string $name, string $value)**
+
 Add new cookie to existing ones. **NOTE:** Curlifier doesn't support multi-cookie requests yet - the feature is on top of the roadmap
 ```php
 $curlifier->addCookie('OTHERCOOKIE', 'SOMEVERYSECRETVALUE');
 ```
 
 **setFollowRedirect(boolean $bool = true)**
+
 cURL can be set to automatically follow HTTP-redirections. If setFollowRedirect is not set the Curlifier will **not** follow redirections automatically.
 To enable redirect following:
 ```php
@@ -94,6 +100,7 @@ $curlifier->setFollowRedirect(false);
 ``
 
 **setGet(array $get = array())**
+
 Set the GET-parameters to pass on each request. Will override any previous parameters set. If called without any parameters (or an empty array) will remove all GET-parameters.
 ```php
 $curlifier->setGet(array(
@@ -102,7 +109,8 @@ $curlifier->setGet(array(
 ));
 ```
 
-**setPost(array $get = array())***
+**setPost(array $get = array())**
+
 Set the POST-parameters to pass on each request. Will override any previous parameters set. If called without any parameters (or an empty array) will remove all POST-parameters.
 ```php
 $curlifier->setPOST(array(
@@ -111,29 +119,34 @@ $curlifier->setPOST(array(
 ));
 ```php
 
-**setReferer(string $url)***
+**setReferer(string $url)**
+
 Set the request header "HTTP_REFERER" to given value.
 ```php
 $curlifier->setReferer('http://localhost/');
 ```
 
-**setUrl(string $url)***
+**setUrl(string $url)**
+
 Sets the URL to where each request will be send. The url-setting is only mandatory parameter to set in order to call request()-method.
 ```php
 $curlifier->setUrl('http://localhost/example.php');
 ```
 
 **setUserAgent(string $userAgent)**
+
 Sets the request header "HTTP_USER_AGENT" to given value. If user agent is not specified, Curlifier will use "cURL" as user agent.
 `$curlifier->setUserAgent('Mozilla/5.0 (Windows; U; MSIE 9.0; WIndows NT 9.0; en-US))');`
 
 **setRandomUserAgent()**
+
 Curlifier has set of pre-defined user agents. Calling this function will randomly pick one of them and set the request header "HTTP_USER_AGENT". If user agent is not specified, Curlifier will use "cURL" as user agent.
 ```php
 $curlifier->setRandomUserAgent();
 ```
 
 **setVerbose(boolean $bool = true)**
+
 Curlifier can set the cURL to output the request process into scripts output. If not specified Curlifier will **not** output the request process.
 To enable verbose mode:
 ``php
@@ -151,20 +164,21 @@ Getters
 Getters should be called _after_ the request()-method.
 
 **getBody()**
+
 Returns the body of last response as **string**.
 ```php
 $responseBody = $curlifier->request()->getBody();
 ```
 
-
 **getHeader()**
+
 Returns the header of last response as **string**.
 ```php
 $responseHeader = $curlifier->request()->getHeader();
 ```
 
-
 **getHttpCode()**
+
 Returns the HTTP_CODE of the last response.
 ```php
 $requestOk = ($curlifier->request()->getHttpCode() === 200);
@@ -175,24 +189,28 @@ Regexp checks
 Curlifier provides couple of ways to directly examine the response with regular expressions.
 
 **bodyMatchesExpression(string $regexp)**
+
 Returns **1** if responses body matches given regular expression. **0** if it doesn't and **false** if there were an error (invalid regexp) during check.
 ```php
 $hasEmails = $curlifier->request()->bodyMatchesExpression('/[a-z0-9_]+@example.com/');
 ```
 
 **getBodyMatches(string $regexp)**
+
 Returns matches from body to given regular expression as **array**. See [preg_match](http://php.net/preg_match) for more details.
 ```
 $emails = $curlifier->request()->getBodyMatches('/[a-z0-9_]+@example.com/');
 ```
 
 **headerMatchesExpression(string $regexp)**
+
 Returns **1** if responses header matches given regular expression. **0** if it doesn't and **false** if there were an error (invalid regexp) during check.
 ```php
 $redirected = $curlifier->request()->headerMatchesExpression('\Location: (http(s)?:/)?/[/a-z0-9_]+.html\');
 ```
 
 **getHeaderMatches(string $regexp)**
+
 Returns matches from header to given regular expression as **array**. See [preg_match](http://php.net/preg_match) for more details.
 ```php
 $redirUrl = $curlifier->request()->getHeaderMatches('|http://localhost/content/fi/[0-9/]+.html|');
