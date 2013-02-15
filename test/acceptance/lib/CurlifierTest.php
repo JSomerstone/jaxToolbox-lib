@@ -288,25 +288,41 @@ class CurlifierTest extends \test\acceptance\AcceptanceTestCase
 
     public function testMultipleCookiesRemainsBetweenRequests()
     {
-        $this->markTestSkipped('Handling multiple cookies doesn`t work - yet');
         $this->curlifier
             ->addCookie('FUUU_X_COOKIE', 'QWERTY1234')
             ->addCookie('TEMPORARY', '1324567890')
-            ->setVerbose(true)
             ->request();
 
         $this
             ->assertHttpSuccess()
-            ->assertCookie('FUUU_X_COOKIE', 'QWERTY1234') //Will fail
+            ->assertCookie('FUUU_X_COOKIE', 'QWERTY1234')
             ->assertCookie('TEMPORARY', '1324567890');
 
         $this->teardown(); //Clear results from previous request
         $this->curlifier
-            ->removeCookie('TEMPORARY') //Remove other cookie
             ->request();
 
         $this->assertCookie('FUUU_X_COOKIE', 'QWERTY1234')
-            ->assertCookieNotSet('TEMPORARY');
+            ->assertCookie('TEMPORARY', '1324567890');
+    }
+
+    public function testUnsettingCookieSuccees()
+    {
+        $this->curlifier
+            ->addCookie('FUUU_X_COOKIE', 'QWERTY1234')
+            ->request();
+
+        $this
+            ->assertHttpSuccess()
+            ->assertCookie('FUUU_X_COOKIE', 'QWERTY1234');
+
+        $this->teardown(); //Clear results from previous request
+
+        $this->curlifier
+            ->removeCookie('FUUU_X_COOKIE') //Remove other cookie
+            ->request();
+
+        $this->assertCookieNotSet('FUUU_X_COOKIE');
     }
 
     /**

@@ -50,42 +50,77 @@ class Curlifier
         $this->curlHandler = curl_init();
     }
 
+    /**
+     *
+     * @param type $url
+     * @return \jaxToolbox\lib\Curlifier
+     */
     public function setUrl($url)
     {
         $this->nextUrl = $url;
         return $this;
     }
 
+    /**
+     *
+     * @param type $post
+     * @return \jaxToolbox\lib\Curlifier
+     */
     public function setPost($post = array())
     {
         $this->nextPost = $post;
         return $this;
     }
 
+    /**
+     *
+     * @param type $get
+     * @return \jaxToolbox\lib\Curlifier
+     */
     public function setGet($get = array())
     {
         $this->nextGet = $get;
         return $this;
     }
 
+    /**
+     *
+     * @param type $url
+     * @return \jaxToolbox\lib\Curlifier
+     */
     public function setReferer($url)
     {
         $this->lastUrl = $url;
         return $this;
     }
 
+    /**
+     *
+     * @param type $bool
+     * @return \jaxToolbox\lib\Curlifier
+     */
     public function setVerbose($bool = true)
     {
         $this->defaults[CURLOPT_VERBOSE] = $bool ? 1 : 0;
         return $this;
     }
 
+    /**
+     *
+     * @param type $bool
+     * @return \jaxToolbox\lib\Curlifier
+     */
     public function setFollowRedirect($bool = true)
     {
         $this->defaults[CURLOPT_FOLLOWLOCATION] = $bool ? 1 : 0;
         return $this;
     }
 
+    /**
+     *
+     * @param type $ipAddress
+     * @return \jaxToolbox\lib\Curlifier
+     */
     public function setHeaderIp($ipAddress)
     {
         $this->defaults[CURLOPT_HTTPHEADER] = array(
@@ -97,17 +132,27 @@ class Curlifier
         return $this;
     }
 
+    /**
+     *
+     * @param type $userAgent
+     * @return \jaxToolbox\lib\Curlifier
+     */
     public function setUserAgent($userAgent)
     {
         $this->userAgent = $userAgent;
         return $this;
     }
 
+    /**
+     *
+     * @return \jaxToolbox\lib\Curlifier
+     */
     public function setRandomUserAgent()
     {
         $this->userAgent = $this->userAgents[
             rand(0,count($this->userAgents)-1)
         ];
+        return $this;
     }
 
     /**
@@ -142,6 +187,7 @@ class Curlifier
         $cookies = isset($parameters['cookie'])
             ? array_merge($this->cookies, $parameters['cookie'])
             : $this->cookies;
+
         $referer = isset($parameters['referer']) ? $parameters['referer'] : $this->lastUrl;
         $userAgent = isset($parameters['userAgent']) ? $parameters['userAgent'] : $this->userAgent;
 
@@ -165,7 +211,7 @@ class Curlifier
         $settings[CURLOPT_POST] = empty($post);
         $settings[CURLOPT_POSTFIELDS] = self::curlify($post);
 
-        $settings[CURLOPT_COOKIE] = self::curlify($cookies);
+        $settings[CURLOPT_COOKIE] = self::unparseCookies($cookies);
 
         curl_setopt_array($this->curlHandler, $settings + $this->defaults);
 
@@ -202,24 +248,45 @@ class Curlifier
         }
     }
 
+    /**
+     *
+     * @param type $name
+     * @param type $value
+     * @return \jaxToolbox\lib\Curlifier
+     */
     public function setCookie($name, $value)
     {
         $this->cookies = array($name => $value);
         return $this;
     }
 
+    /**
+     *
+     * @param type $name
+     * @param type $value
+     * @return \jaxToolbox\lib\Curlifier
+     */
     public function addCookie($name, $value)
     {
         $this->cookies[$name] = $value;
         return $this;
     }
 
+    /**
+     *
+     * @param type $name
+     * @return \jaxToolbox\lib\Curlifier
+     */
     public function removeCookie($name)
     {
         unset($this->cookies[$name]);
         return $this;
     }
 
+    /**
+     *
+     * @return string
+     */
     public function getHeader()
     {
         return $this->lastHeader;
@@ -235,6 +302,7 @@ class Curlifier
     {
         return preg_match($regexp, $this->lastHeader);
     }
+
 
     public function getBody()
     {
@@ -268,6 +336,14 @@ class Curlifier
             $curlified .= $key.'='.$value.'&';
         }
         return rtrim($curlified, '&');
+    }
+
+    private static function unparseCookies($listOfCookies)
+    {
+        $cookieString = self::curlify($listOfCookies);
+        //POST and GET parameters are seperated by "&"
+        //Cookies by "; "
+        return str_replace('&', '; ', $cookieString);
     }
 
 }
