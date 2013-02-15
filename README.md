@@ -117,7 +117,7 @@ $curlifier->setPOST(array(
     'id' => '2',
     'name' => 'foo',
 ));
-```php
+```
 
 **setReferer(string $url)**
 
@@ -218,6 +218,7 @@ $redirUrl = $curlifier->request()->getHeaderMatches('|http://localhost/content/f
 
 Roadmap
 -------
+
 - [ ] Multi-cookie support
 - [ ] Support for "cookie jar"
 - [ ] Auto-parsing responses "Set-cookie" -headers and setting cookie accordingly
