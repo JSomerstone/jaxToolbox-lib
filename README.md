@@ -71,16 +71,19 @@ $curlifier->setCookie('MYCOOKIE', 'SOMEVERYSECRETVALUE');
 **setCookies(array $listOfCookies)**
 
 Replaces current cookies with given cookies. Cookies must be given as associative array:
-`array( 'nameOfCookie' => 'valueOfCookie')`
+```php
+array( 'nameOfCookie' => 'valueOfCookie')
+```
 
-**NOTE:** Curlifier doesn't support multi-cookie requests yet - the feature is on top of the roadmap
-`$curlifier->setCookies(array(
+```php
+$curlifier->setCookies(array(
     'MYCOOKIE' => 'SOMEVERYSECRETVALUE',
     'OTHERCOOKIE' => 'VALUEOFTHAT',
-));`
+));
+``
 **addCookie(string $name, string $value)**
 
-Add new cookie to existing ones. **NOTE:** Curlifier doesn't support multi-cookie requests yet - the feature is on top of the roadmap
+Add new cookie to existing ones.
 ```php
 $curlifier->addCookie('OTHERCOOKIE', 'SOMEVERYSECRETVALUE');
 ```
@@ -97,7 +100,7 @@ $curlifier->setFollowRedirect(true);
 To disable redirect following:
 ```php
 $curlifier->setFollowRedirect(false);
-``
+```
 
 **setGet(array $get = array())**
 
@@ -136,7 +139,9 @@ $curlifier->setUrl('http://localhost/example.php');
 **setUserAgent(string $userAgent)**
 
 Sets the request header "HTTP_USER_AGENT" to given value. If user agent is not specified, Curlifier will use "cURL" as user agent.
-`$curlifier->setUserAgent('Mozilla/5.0 (Windows; U; MSIE 9.0; WIndows NT 9.0; en-US))');`
+```php
+$curlifier->setUserAgent('Mozilla/5.0 (Windows; U; MSIE 9.0; WIndows NT 9.0; en-US))');
+```
 
 **setRandomUserAgent()**
 
@@ -161,7 +166,7 @@ $curlifier->setVerbose(false);
 
 Getters
 -------
-Getters should be called _after_ the request()-method.
+Getters should be called **after** the _request()_-method.
 
 **getBody()**
 
@@ -198,7 +203,7 @@ $hasEmails = $curlifier->request()->bodyMatchesExpression('/[a-z0-9_]+@example.c
 **getBodyMatches(string $regexp)**
 
 Returns matches from body to given regular expression as **array**. See [preg_match](http://php.net/preg_match) for more details.
-```
+```php
 $emails = $curlifier->request()->getBodyMatches('/[a-z0-9_]+@example.com/');
 ```
 
@@ -206,7 +211,7 @@ $emails = $curlifier->request()->getBodyMatches('/[a-z0-9_]+@example.com/');
 
 Returns **1** if responses header matches given regular expression. **0** if it doesn't and **false** if there were an error (invalid regexp) during check.
 ```php
-$redirected = $curlifier->request()->headerMatchesExpression('\Location: (http(s)?:/)?/[/a-z0-9_]+.html\');
+$redirected = $curlifier->request()->headerMatchesExpression('|Location: (http(s)?:/)?/[/a-z0-9_]+.html|');
 ```
 
 **getHeaderMatches(string $regexp)**
@@ -219,11 +224,11 @@ $redirUrl = $curlifier->request()->getHeaderMatches('|http://localhost/content/f
 Roadmap
 -------
 
-- [ ] Multi-cookie support
-- [ ] Support for "cookie jar"
-- [ ] Auto-parsing responses "Set-cookie" -headers and setting cookie accordingly
-- [ ] Getting PHP-array from JSON-response
-- [ ] Getting PHP-array from XML-response
+- Multi-cookie support - **Done**
+- Support for "cookie jar"
+- Auto-parsing responses "Set-cookie" -headers and setting cookie accordingly
+- Getting PHP-array from JSON-response
+- Getting PHP-array from XML-response
 
 
 jaxToolbox/lib/StringPermutator
