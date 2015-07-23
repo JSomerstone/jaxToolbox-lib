@@ -403,7 +403,7 @@ class Curlifier
         return $this->getXmlResponse() ? true : false;
     }
 
-    private static function unparseCookies($listOfCookies)
+    private static function unparseCookies($listOfCookies = array())
     {
         $cookieString = http_build_query($listOfCookies);
         //POST and GET parameters are seperated by "&"
