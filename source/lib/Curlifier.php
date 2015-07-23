@@ -195,7 +195,7 @@ class Curlifier
         $url = sprintf(
             "$url%s%s",
             empty($get) ? '' : '?',
-            http_build_query($get)
+            \http_build_query($get)
         );
 
         $settings = array(
@@ -205,7 +205,7 @@ class Curlifier
         );
 
         $settings[CURLOPT_POST] = empty($post);
-        $settings[CURLOPT_POSTFIELDS] = http_build_query($post);
+        $settings[CURLOPT_POSTFIELDS] = \http_build_query($post);
 
         $settings[CURLOPT_COOKIE] = self::unparseCookies($cookies);
 
