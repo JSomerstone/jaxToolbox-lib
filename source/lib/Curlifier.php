@@ -405,6 +405,9 @@ class Curlifier
 
     private static function unparseCookies($listOfCookies = array())
     {
+        if (empty($listOfCookies))
+            return '';
+
         $cookieString = http_build_query($listOfCookies);
         //POST and GET parameters are seperated by "&"
         //Cookies by "; "
