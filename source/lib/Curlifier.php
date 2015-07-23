@@ -195,7 +195,7 @@ class Curlifier
         $url = sprintf(
             "$url%s%s",
             empty($get) ? '' : '?',
-            \http_build_query($get)
+            http_build_query($get)
         );
 
         $settings = array(
@@ -205,7 +205,7 @@ class Curlifier
         );
 
         $settings[CURLOPT_POST] = empty($post);
-        $settings[CURLOPT_POSTFIELDS] = \http_build_query($post);
+        $settings[CURLOPT_POSTFIELDS] = http_build_query($post);
 
         $settings[CURLOPT_COOKIE] = self::unparseCookies($cookies);
 
@@ -405,7 +405,10 @@ class Curlifier
 
     private static function unparseCookies($listOfCookies)
     {
-        return http_build_cookie($listOfCookies);
+        $cookieString = http_build_query($listOfCookies);
+        //POST and GET parameters are seperated by "&"
+        //Cookies by "; "
+        return str_replace('&', '; ', $cookieString);
     }
 
 }
