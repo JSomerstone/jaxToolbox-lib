@@ -195,7 +195,7 @@ class Curlifier
         $url = sprintf(
             "$url%s%s",
             empty($get) ? '' : '?',
-            self::curlify($get)
+            http_build_query($get)
         );
 
         $settings = array(
@@ -205,7 +205,7 @@ class Curlifier
         );
 
         $settings[CURLOPT_POST] = empty($post);
-        $settings[CURLOPT_POSTFIELDS] = self::curlify($post);
+        $settings[CURLOPT_POSTFIELDS] = http_build_query($post);
 
         $settings[CURLOPT_COOKIE] = self::unparseCookies($cookies);
 
@@ -403,25 +403,9 @@ class Curlifier
         return $this->getXmlResponse() ? true : false;
     }
 
-    private static function curlify($settings = array())
-    {
-        if (empty($settings))
-            return;
-
-        $curlified = '';
-        foreach($settings as $key => $value)
-        {
-            $curlified .= $key.'='.$value.'&';
-        }
-        return rtrim($curlified, '&');
-    }
-
     private static function unparseCookies($listOfCookies)
     {
-        $cookieString = self::curlify($listOfCookies);
-        //POST and GET parameters are seperated by "&"
-        //Cookies by "; "
-        return str_replace('&', '; ', $cookieString);
+        return http_build_cookie($listOfCookies);
     }
 
 }
